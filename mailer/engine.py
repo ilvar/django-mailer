@@ -11,6 +11,12 @@ except ImportError:
     class BlacklistedAddressException(Exception):
         pass
 
+try:
+    from boto.ses.exceptions import SESError
+except ImportError:
+    class SESError(Exception):
+        pass
+
 from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
 try:
@@ -77,6 +83,9 @@ def send_all():
     deferred = 0
     sent = 0
     
+    exceptions = (SESError, socket_error, smtplib.SMTPSenderRefused, 
+        smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError, BlacklistedAddressException)
+    
     try:
         connection = None
         for message in prioritize():
@@ -90,7 +99,7 @@ def send_all():
                 MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
                 sent += 1
-            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError, BlacklistedAddressException), err:
+            except exceptions, err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
