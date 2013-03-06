@@ -12,7 +12,7 @@ except ImportError:
         pass
 
 try:
-    from boto.ses.exceptions import SESError
+    from boto.exception import BotoServerError
 except ImportError:
     class SESError(Exception):
         pass
@@ -83,7 +83,7 @@ def send_all():
     deferred = 0
     sent = 0
     
-    exceptions = (SESError, socket_error, smtplib.SMTPSenderRefused, 
+    exceptions = (BotoServerError, socket_error, smtplib.SMTPSenderRefused, 
         smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError, BlacklistedAddressException)
     
     try:
